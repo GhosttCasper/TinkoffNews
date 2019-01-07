@@ -5,14 +5,10 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
-import io.reactivex.Observable
+import com.google.gson.Gson
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.rxkotlin.zipWith
 import io.reactivex.schedulers.Schedulers
-import java.lang.RuntimeException
-import java.net.HttpURLConnection
-import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,20 +23,21 @@ class MainActivity : AppCompatActivity() {
         vText.setTextColor(0xFFFF0000.toInt())
         vText.setOnClickListener {
             Log.v("tag", "Кнопка нажата!")
-            val i = Intent(this, SecondActivity::class.java)
-            i.putExtra("tag1", vText.text)
-            startActivityForResult(i, 0)
+//            val i = Intent(this, SecondActivity::class.java)
+//            i.putExtra("tag1", vText.text)
+//            startActivityForResult(i, 0)
 
-            val o = createRequest("").flatMap { Observable.create<String> {} }.zipWith(Observable.create<String> {})
-                .map { it.second + it.first }
-                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+            val o =
+                createRequest("https://api.tinkoff.ru/v1/news")
+
+                    .map { Gson().fromJson(it, Payload::class.java) }
+                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
             request = o.subscribe({
-
-
+                for (item in it.items)
+                    Log.w("test", "name: ${item.name}")
             }, {
-
-
+                Log.e("test", "", it)
             })
         }
         Log.v("tag", "text")
@@ -77,3 +74,27 @@ class MainActivity : AppCompatActivity() {
         request?.dispose()
     }
 }
+
+class Payload(
+    val items: ArrayList<PayloadItem>
+)
+
+class PayloadItem(
+    val id: String,
+    val name: String,
+    val text: String,
+    val publicationDate: String,
+    val bankInfoTypeId: String
+
+)
+
+/*
+"resultCode":"OK","payload":
+[
+{"id":"10024",
+"name":"20122017-tinkoff-bank-x-mgu",
+"text":"Тинькофф Банк начинает сотрудничество с кафедрой математических и компьютерных методов анализа мехмата МГУ",
+"publicationDate":{"milliseconds":1513767691000},
+"bankInfoTypeId":2
+},
+ */
