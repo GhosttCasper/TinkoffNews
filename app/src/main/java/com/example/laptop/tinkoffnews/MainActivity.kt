@@ -1,8 +1,8 @@
 package com.example.laptop.tinkoffnews
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.TextView
 import com.google.gson.Gson
@@ -22,25 +22,24 @@ class MainActivity : AppCompatActivity() {
         vText = findViewById<TextView>(R.id.textView)
         vText.setTextColor(0xFFFF0000.toInt())
         vText.setOnClickListener {
-            Log.v("tag", "Кнопка нажата!")
+            Log.e("tag", "НАЖАТА КНОПКА")
 //            val i = Intent(this, SecondActivity::class.java)
 //            i.putExtra("tag1", vText.text)
 //            startActivityForResult(i, 0)
 
             val o =
                 createRequest("https://api.tinkoff.ru/v1/news")
-
-                    .map { Gson().fromJson(it, Payload::class.java) }
+                    .map { Gson().fromJson(it, PayloadAPI::class.java) }
                     .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
             request = o.subscribe({
                 for (item in it.items)
-                    Log.w("test", "name: ${item.name}")
+                    Log.w("tag", "text ${item.text}")
             }, {
-                Log.e("test", "", it)
+                Log.e("tag", "Error, but why?", it)
             })
         }
-        Log.v("tag", "text")
+        Log.e("tag", "был запущен onCreate")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -70,16 +69,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         request?.dispose()
+        super.onDestroy()
     }
 }
 
-class Payload(
-    val items: ArrayList<PayloadItem>
+class PayloadAPI(
+    val items: ArrayList<PayloadItemAPI>
 )
 
-class PayloadItem(
+class PayloadItemAPI(
     val id: String,
     val name: String,
     val text: String,

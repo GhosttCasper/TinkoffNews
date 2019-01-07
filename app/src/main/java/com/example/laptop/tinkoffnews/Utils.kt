@@ -1,7 +1,6 @@
 package com.example.laptop.tinkoffnews
 
 import io.reactivex.Observable
-import java.lang.RuntimeException
 import java.net.HttpURLConnection
 import java.net.URL
 
