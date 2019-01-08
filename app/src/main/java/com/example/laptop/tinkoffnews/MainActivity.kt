@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
                     .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
             request = o.subscribe({
-                for (item in it.items)
+                for (item in it.payload)
                     Log.w("tag", "text ${item.text}")
             }, {
                 Log.e("tag", "Error, but why?", it)
@@ -52,22 +52,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-    }
-
     override fun onDestroy() {
         request?.dispose()
         super.onDestroy()
@@ -75,16 +59,19 @@ class MainActivity : AppCompatActivity() {
 }
 
 class PayloadAPI(
-    val items: ArrayList<PayloadItemAPI>
+    val payload: ArrayList<PayloadItemAPI>
 )
 
 class PayloadItemAPI(
     val id: String,
     val name: String,
     val text: String,
-    val publicationDate: String,
+    val publicationDate: BeginObject,
     val bankInfoTypeId: String
+)
 
+class BeginObject(
+    val milliseconds: String
 )
 
 /*
