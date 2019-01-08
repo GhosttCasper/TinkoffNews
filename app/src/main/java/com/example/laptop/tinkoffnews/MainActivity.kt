@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.gson.Gson
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -13,16 +14,18 @@ import io.reactivex.schedulers.Schedulers
 class MainActivity : AppCompatActivity() {
 
     lateinit var vText: TextView
+    lateinit var vList: LinearLayout
     var request: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        vText = findViewById<TextView>(R.id.textView)
-        vText.setTextColor(0xFFFF0000.toInt())
-        vText.setOnClickListener {
-            Log.e("tag", "НАЖАТА КНОПКА")
+        vList = findViewById<LinearLayout>(R.id.act1_list)
+//        vText = findViewById<TextView>(R.id.textView)
+//        vText.setTextColor(0xFFFF0000.toInt())
+//        vText.setOnClickListener {
+//            Log.e("tag", "НАЖАТА КНОПКА")
 //            val i = Intent(this, SecondActivity::class.java)
 //            i.putExtra("tag1", vText.text)
 //            startActivityForResult(i, 0)
@@ -33,13 +36,24 @@ class MainActivity : AppCompatActivity() {
                     .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
             request = o.subscribe({
-                for (item in it.payload)
-                    Log.w("tag", "text ${item.text}")
+
+                //                for (item in it.payload)
+//                    Log.w("tag", "text ${item.text}")
             }, {
                 Log.e("tag", "Error, but why?", it)
             })
+//        }
+//        Log.e("tag", "был запущен onCreate")
+    }
+
+    fun showLinearLayout(payloadList: ArrayList<PayloadItemAPI>) {
+        val inflater = layoutInflater
+        for (f in payloadList) {
+            val view = inflater.inflate(R.layout.list_item, vList)
+            val vTitle = view.findViewById<TextView>(R.id.item_title)
+            vTitle.text = f.text
+            vList.addView(view)
         }
-        Log.e("tag", "был запущен onCreate")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
