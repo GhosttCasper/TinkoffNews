@@ -3,6 +3,8 @@ package com.example.laptop.tinkoffnews
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var vText: TextView
     lateinit var vList: LinearLayout
     lateinit var vListView: ListView
+    lateinit var vRecView: RecyclerView
     var request: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 //        vList = findViewById<LinearLayout>(R.id.act1_list)
-        vListView = findViewById<ListView>(R.id.act1_listView)
+        vRecView = findViewById<RecyclerView>(R.id.act1_resView)
 
         val o =
             createRequest("https://api.tinkoff.ru/v1/news")
@@ -36,7 +39,8 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
         request = o.subscribe({
-            showListView(it.payload)
+            showRecView(it.payload)
+//            showListView(it.payload)
 //            showLinearLayout(it.payload)
 
             //                for (item in it.payload)
@@ -58,6 +62,13 @@ class MainActivity : AppCompatActivity() {
 
     fun showListView(payloadList: ArrayList<PayloadItemAPI>) {
         vListView.adapter = Adapter(payloadList)
+    }
+
+    fun showRecView(payloadList: ArrayList<PayloadItemAPI>) {
+        vRecView.adapter = RecAdapter(payloadList)
+        vRecView.layoutManager = LinearLayoutManager(this)
+//        vRecView.addItemDecoration()
+//        vRecView.animation
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -112,6 +123,31 @@ class Adapter(val payload: ArrayList<PayloadItemAPI>) : BaseAdapter() {
 
     override fun getCount(): Int {
         return payload.size
+    }
+}
+
+class RecAdapter(val payload: ArrayList<PayloadItemAPI>) : RecyclerView.Adapter<RecHolder>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        val view = inflater.inflate(R.layout.list_item, parent, false)
+        return RecHolder(view)
+    }
+
+    override fun getItemCount(): Int {
+        return payload.size
+    }
+
+    override fun onBindViewHolder(holder: RecHolder, position: Int) {
+        val item = payload[position]
+        holder.bind(item)
+    }
+
+}
+
+class RecHolder(view: View) : RecyclerView.ViewHolder(view) {
+    fun bind(item: PayloadItemAPI) {
+        val vTitle = itemView.findViewById<TextView>(R.id.item_title)
+        vTitle.text = item.text
     }
 
 }
