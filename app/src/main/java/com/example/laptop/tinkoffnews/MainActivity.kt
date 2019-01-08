@@ -22,34 +22,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         vList = findViewById<LinearLayout>(R.id.act1_list)
-//        vText = findViewById<TextView>(R.id.textView)
-//        vText.setTextColor(0xFFFF0000.toInt())
-//        vText.setOnClickListener {
-//            Log.e("tag", "НАЖАТА КНОПКА")
-//            val i = Intent(this, SecondActivity::class.java)
-//            i.putExtra("tag1", vText.text)
-//            startActivityForResult(i, 0)
 
-            val o =
-                createRequest("https://api.tinkoff.ru/v1/news")
-                    .map { Gson().fromJson(it, PayloadAPI::class.java) }
-                    .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+        val o =
+            createRequest("https://api.tinkoff.ru/v1/news")
+                .map { Gson().fromJson(it, PayloadAPI::class.java) }
+                .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
-            request = o.subscribe({
+        request = o.subscribe({
+            showLinearLayout(it.payload)
 
-                //                for (item in it.payload)
+            //                for (item in it.payload)
 //                    Log.w("tag", "text ${item.text}")
-            }, {
-                Log.e("tag", "Error, but why?", it)
-            })
-//        }
-//        Log.e("tag", "был запущен onCreate")
+        }, {
+            Log.e("tag", "Error, but why?", it)
+        })
     }
 
     fun showLinearLayout(payloadList: ArrayList<PayloadItemAPI>) {
         val inflater = layoutInflater
         for (f in payloadList) {
-            val view = inflater.inflate(R.layout.list_item, vList)
+            val view = inflater.inflate(R.layout.list_item, vList, false)
             val vTitle = view.findViewById<TextView>(R.id.item_title)
             vTitle.text = f.text
             vList.addView(view)
