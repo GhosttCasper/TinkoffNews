@@ -4,7 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.TextView
 import com.google.gson.Gson
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -15,13 +20,15 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var vText: TextView
     lateinit var vList: LinearLayout
+    lateinit var vListView: ListView
     var request: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        vList = findViewById<LinearLayout>(R.id.act1_list)
+//        vList = findViewById<LinearLayout>(R.id.act1_list)
+        vListView = findViewById<ListView>(R.id.act1_listView)
 
         val o =
             createRequest("https://api.tinkoff.ru/v1/news")
@@ -29,7 +36,8 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
         request = o.subscribe({
-            showLinearLayout(it.payload)
+            showListView(it.payload)
+//            showLinearLayout(it.payload)
 
             //                for (item in it.payload)
 //                    Log.w("tag", "text ${item.text}")
@@ -46,6 +54,10 @@ class MainActivity : AppCompatActivity() {
             vTitle.text = f.text
             vList.addView(view)
         }
+    }
+
+    fun showListView(payloadList: ArrayList<PayloadItemAPI>) {
+        vListView.adapter = Adapter(payloadList)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -79,6 +91,30 @@ class PayloadItemAPI(
 class BeginObject(
     val milliseconds: String
 )
+
+class Adapter(val payload: ArrayList<PayloadItemAPI>) : BaseAdapter() {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        val inflater = LayoutInflater.from(parent!!.context)
+        val view = convertView ?: inflater.inflate(R.layout.list_item, parent, false)
+        val vTitle = view.findViewById<TextView>(R.id.item_title)
+        val item = getItem(position) as PayloadItemAPI
+        vTitle.text = item.text
+        return view
+    }
+
+    override fun getItem(position: Int): Any {
+        return payload[position]
+    }
+
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
+    override fun getCount(): Int {
+        return payload.size
+    }
+
+}
 
 /*
 "resultCode":"OK","payload":
