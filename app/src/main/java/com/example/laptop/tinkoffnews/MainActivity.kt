@@ -18,6 +18,9 @@ import com.google.gson.Gson
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import io.realm.Realm
+import io.realm.RealmList
+import io.realm.RealmObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,7 +43,32 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
         request = o.subscribe({
-            showRecView(it.payload)
+
+            val payload = Payload(
+                it.payload.mapTo(RealmList<PayloadItem>(),
+                    { payload ->
+                        PayloadItem(
+                            payload.id,
+                            payload.name,
+                            payload.text,
+                            payload.publicationDate,
+                            payload.bankInfoTypeId
+                        )
+                    })
+            )
+
+            Realm.getDefaultInstance().executeTransaction { realm ->
+
+                val oldList = realm.where(Payload::class.java).findAll()
+                if (oldList.size > 0)
+                    for (item in oldList)
+                        item.deleteFromRealm()
+
+                realm.copyToRealm(payload)
+            }
+
+            showRecView()
+
 //            showListView(it.payload)
 //            showLinearLayout(it.payload)
 
@@ -48,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 //                    Log.w("tag", "text ${item.text}")
         }, {
             Log.e("tag", "Error, but why?", it)
+            showRecView()
         })
     }
 
@@ -65,11 +94,17 @@ class MainActivity : AppCompatActivity() {
         vListView.adapter = Adapter(payloadList)
     }
 
-    fun showRecView(payloadList: ArrayList<PayloadItemAPI>) {
-        vRecView.adapter = RecAdapter(payloadList)
-        vRecView.layoutManager = LinearLayoutManager(this)
-//        vRecView.addItemDecoration()
-//        vRecView.animation
+    fun showRecView() {
+
+        Realm.getDefaultInstance().executeTransaction { realm ->
+            val payload = realm.where(Payload::class.java).findAll()
+            if (payload.size > 0) {
+                vRecView.adapter = RecAdapter(payload[0]!!.payload)
+                vRecView.layoutManager = LinearLayoutManager(this)
+            }
+        }
+
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -96,13 +131,29 @@ class PayloadItemAPI(
     val id: String,
     val name: String,
     val text: String,
-    val publicationDate: BeginObject,
+    val publicationDate: BeginObjectAPI,
     val bankInfoTypeId: String
 )
 
-class BeginObject(
+class BeginObjectAPI(
     val milliseconds: String
 )
+
+open class Payload(
+    var payload: RealmList<PayloadItem> = RealmList<PayloadItem>()
+) : RealmObject()
+
+open class PayloadItem(
+    var id: String = "",
+    var name: String = "",
+    var text: String = "",
+    var publicationDate: BeginObject = BeginObject(""),
+    var bankInfoTypeId: String = ""
+) : RealmObject()
+
+open class BeginObject(
+    var milliseconds: String = ""
+) : RealmObject()
 
 class Adapter(val payload: ArrayList<PayloadItemAPI>) : BaseAdapter() {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
@@ -127,7 +178,7 @@ class Adapter(val payload: ArrayList<PayloadItemAPI>) : BaseAdapter() {
     }
 }
 
-class RecAdapter(val payload: ArrayList<PayloadItemAPI>) : RecyclerView.Adapter<RecHolder>() {
+class RecAdapter(val payload: RealmList<PayloadItem>) : RecyclerView.Adapter<RecHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecHolder {
         val inflater = LayoutInflater.from(parent.context)
         val view = inflater.inflate(R.layout.list_item, parent, false)
@@ -139,14 +190,14 @@ class RecAdapter(val payload: ArrayList<PayloadItemAPI>) : RecyclerView.Adapter<
     }
 
     override fun onBindViewHolder(holder: RecHolder, position: Int) {
-        val item = payload[position]
+        val item = payload[position]!!
         holder.bind(item)
     }
 
 }
 
 class RecHolder(view: View) : RecyclerView.ViewHolder(view) {
-    fun bind(item: PayloadItemAPI) {
+    fun bind(item: PayloadItem) {
         val vTitle = itemView.findViewById<TextView>(R.id.item_title)
         vTitle.text = item.text
         itemView.setOnClickListener {
