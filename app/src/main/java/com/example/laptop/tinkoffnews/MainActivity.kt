@@ -1,6 +1,7 @@
 package com.example.laptop.tinkoffnews
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -148,6 +149,11 @@ class RecHolder(view: View) : RecyclerView.ViewHolder(view) {
     fun bind(item: PayloadItemAPI) {
         val vTitle = itemView.findViewById<TextView>(R.id.item_title)
         vTitle.text = item.text
+        itemView.setOnClickListener {
+            val i = Intent(Intent.ACTION_VIEW)
+            i.data = Uri.parse("https://api.tinkoff.ru/v1/news_content?id=10024")
+            vTitle.context.startActivity(i)
+        }
     }
 
 }
